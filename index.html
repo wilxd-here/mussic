@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Meta Tags xaerisoftMussic -->
+    <title>xaerisoftMussic - Web Music Player</title>
+    <meta content="xaerisoftMussic" name="apple-mobile-web-app-title"/>
+    <meta content="xaerisoftMussic" property="og:site_name"/>
+    <meta content="xaerisoftMussic" property="og:title"/>
+    <meta content="xaerisoftMussic - Web Music Player" property="og:description"/>
+    
+    <!-- Tailwind CSS (Opsional untuk utilitas layout, jika kamu pakai di versi sebelumnya) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --bg-color: #030303; /* Hitam sangat pekat */
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --accent-green: #00FF41; /* Hijau Neon/Matrix khas xaerisoft */
+            --border-color: rgba(0, 255, 65, 0.15); 
+        }
+
+        html, body { 
+            background: var(--bg-color); 
+            color: var(--text-primary); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hilangkan Scrollbar */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Background Gelap Dasar */
+        .app-bg {
+            position: fixed; inset: 0; z-index: -1; 
+            background: radial-gradient(circle at top, #0a140d 0%, var(--bg-color) 70%);
+        }
+
+        /* Teks Logo Keren */
+        .chrome-text {
+            color: var(--accent-green);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+
+        /* Efek Kaca (Glassmorphism) */
+        .glass-card, .glass-dock {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            background: rgba(15, 15, 15, 0.9);
+            border-color: rgba(0, 255, 65, 0.5);
+            box-shadow: 0 8px 25px rgba(0, 255, 65, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(circle at 50% 50%, #0a1f0f 0%, #000000 80%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .splash-logo-wrap {
+            border: 2px solid var(--accent-green);
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.3);
+            border-radius: 50%; width: 100px; height: 100px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .splash-bar {
+            width: 150px; height: 4px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 20px;
+        }
+        .splash-bar i {
+            display: block; height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
+            width: 50%;
+            animation: loading 1.5s infinite ease-in-out;
+        }
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        /* Animasi Equalizer */
+        @keyframes eq { 0% { height: 4px; } 50% { height: 16px; } 100% { height: 4px; } }
+        .animate-eq-1 { animation: eq 1s ease-in-out infinite; }
+        .animate-eq-2 { animation: eq 1.2s ease-in-out infinite 0.2s; }
+        .animate-eq-3 { animation: eq 0.8s ease-in-out infinite 0.4s; }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 255, 65, 0.15); border: 1px solid var(--accent-green);
+            color: var(--accent-green); padding: 10px 20px; border-radius: 30px;
+            font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none;
+            transition: all 0.3s ease; z-index: 1000; box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo-wrap">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--accent-green)">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+        </div>
+        <div class="splash-title chrome-text text-2xl">xaerisoftMussic</div>
+        <div class="splash-bar"><i></i></div>
+    </div>
+
+    <div class="app-bg"></div>
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full glass-dock z-50 px-4 py-3 flex justify-between items-center">
+        <div class="chrome-text text-xl">xaerisoftMussic</div>
+        <button class="text-[#00FF41] hover:text-white transition">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
+    </header>
+
+    <!-- Main Content (Tempat API me-render lagu) -->
+    <main id="main-content" class="pt-20 pb-28 px-4 max-w-2xl mx-auto min-h-screen">
+        <h2 class="text-white/80 font-bold mb-4 text-lg">Direkomendasikan untukmu</h2>
+        
+        <div id="track-list" class="flex flex-col gap-3">
+            <!-- Contoh Card Lagu (Render API kamu di sini) -->
+            <div class="glass-card rounded-xl p-3 flex items-center gap-4 cursor-pointer" onclick="playMusic('Lagu Hacker 1', 'xaerisoft')">
+                <div class="w-14 h-14 bg-gray-800 rounded-lg bg-cover bg-center" style="background-image: url('https://source.unsplash.com/random/100x100/?cyberpunk');"></div>
+                <div class="flex-1">
+                    <h3 class="text-white font-semibold text-sm">System Override</h3>
+                    <p class="text-[#00FF41]/70 text-xs">xaerisoft</p>
+                </div>
+                <button class="text-[#00FF41]">
+                    <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full glass-dock z-50 px-2 py-2 pb-safe">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <div id="nav-home" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none py-1.5 px-3 rounded-2xl bg-[#00FF41]/10 text-[#00FF41] font-bold transition-all duration-300 shadow-[0_0_10px_rgba(0,255,65,0.2)] scale-105 border border-[#00FF41]/40" onclick="switchNav('home')">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span class="text-[10px] mt-1">Beranda</span>
+            </div>
+            <div id="nav-search" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none py-1.5 px-3 rounded-2xl text-white/40 hover:text-[#00FF41]/70 transition-all duration-300 border border-transparent" onclick="switchNav('search')">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <span class="text-[10px] mt-1">Cari</span>
+            </div>
+            <div id="nav-library" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none py-1.5 px-3 rounded-2xl text-white/40 hover:text-[#00FF41]/70 transition-all duration-300 border border-transparent" onclick="switchNav('library')">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+                <span class="text-[10px] mt-1">Koleksi</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Komponen Toast / Notifikasi -->
+    <div id="toast">Notifikasi sistem xaerisoft</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
